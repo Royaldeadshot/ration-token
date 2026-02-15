@@ -1,0 +1,156 @@
+{
+  "design_system": {
+    "identity": {
+      "name": "RationQueue",
+      "persona": "E1 - The Anti-AI Designer",
+      "tone": "Trustworthy, Hyper-Legible, Efficient, Accessible",
+      "theme": "light",
+      "principles": [
+        "Contrast is King: Outdoor visibility priority",
+        "Type is Interface: Numbers must be readable from 5 meters",
+        "One Action Per Screen: Reduce cognitive load",
+        "Feedback Loop: Always show 'Loading' or 'Success' clearly"
+      ]
+    },
+    "typography": {
+      "font_family": {
+        "headings": "Work Sans, sans-serif",
+        "body": "Public Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "token_display": "text-7xl md:text-9xl font-bold tracking-tighter",
+        "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+        "h2": "text-3xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold",
+        "body_lg": "text-lg md:text-xl leading-relaxed",
+        "body_base": "text-base leading-relaxed",
+        "caption": "text-sm font-medium uppercase tracking-wider text-muted-foreground"
+      },
+      "imports": [
+        "@fontsource/work-sans",
+        "@fontsource/public-sans",
+        "@fontsource/jetbrains-mono"
+      ]
+    },
+    "colors": {
+      "palette": {
+        "primary": {
+          "DEFAULT": "#15803d",
+          "foreground": "#ffffff",
+          "hover": "#166534"
+        },
+        "secondary": {
+          "DEFAULT": "#ea580c",
+          "foreground": "#ffffff",
+          "hover": "#c2410c"
+        },
+        "background": "#ffffff",
+        "foreground": "#0f172a",
+        "muted": {
+          "DEFAULT": "#f1f5f9",
+          "foreground": "#64748b"
+        },
+        "card": {
+          "DEFAULT": "#ffffff",
+          "foreground": "#0f172a",
+          "border": "#e2e8f0"
+        },
+        "status": {
+          "success": "#22c55e",
+          "warning": "#eab308",
+          "error": "#ef4444",
+          "info": "#3b82f6"
+        }
+      },
+      "usage": {
+        "token_current": "text-secondary font-mono",
+        "token_next": "text-primary font-mono",
+        "token_waiting": "text-muted-foreground font-mono"
+      }
+    },
+    "layout": {
+      "spacing": {
+        "container": "p-4 md:p-8 max-w-md mx-auto md:max-w-2xl lg:max-w-4xl",
+        "section": "py-8 md:py-12",
+        "element": "mb-4 md:mb-6"
+      },
+      "grid": {
+        "dashboard": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6",
+        "queue_list": "flex flex-col gap-3"
+      },
+      "radius": {
+        "default": "rounded-lg",
+        "button": "rounded-full",
+        "card": "rounded-xl"
+      }
+    },
+    "components": {
+      "buttons": {
+        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 h-12 md:h-14 text-lg font-semibold px-8 shadow-md hover:shadow-lg transition-all active:scale-95",
+        "secondary": "bg-secondary text-secondary-foreground hover:bg-secondary/90 h-12 md:h-14 text-lg font-semibold px-8 shadow-md",
+        "outline": "border-2 border-primary text-primary hover:bg-primary/10 h-12 font-medium",
+        "ghost": "hover:bg-muted text-foreground font-medium"
+      },
+      "cards": {
+        "base": "bg-card border border-border shadow-sm hover:shadow-md transition-shadow duration-200 p-6",
+        "highlight": "bg-primary/5 border-2 border-primary/20 shadow-lg p-8 ring-4 ring-primary/5"
+      },
+      "inputs": {
+        "default": "h-14 text-lg px-4 border-2 border-input focus:border-primary focus:ring-4 focus:ring-primary/10 rounded-lg bg-background placeholder:text-muted-foreground/50 transition-all"
+      },
+      "badges": {
+        "default": "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+        "status_serving": "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        "status_waiting": "border-transparent bg-primary/20 text-primary-foreground hover:bg-primary/80 text-primary",
+        "status_missed": "border-transparent bg-destructive/10 text-destructive hover:bg-destructive/20"
+      }
+    },
+    "assets": {
+      "icons": "Use 'lucide-react' library. Default size: 24px (w-6 h-6). Stroke width: 2px.",
+      "images": {
+        "landing_hero": "https://images.unsplash.com/photo-1739066598279-1297113f5c6a?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwxfHxpbmRpYW4lMjB2aWxsYWdlJTIwc2hvcCUyMHN0b3JlZnJvbnR8ZW58MHx8fHwxNzcxMTYxNzMzfDA&ixlib=rb-4.1.0&q=85",
+        "shop_placeholder": "https://images.unsplash.com/photo-1598972676126-d9da073a8a81?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjV8MHwxfHNlYXJjaHwyfHxpbmRpYW4lMjB2aWxsYWdlJTIwc2hvcCUyMHN0b3JlZnJvbnR8ZW58MHx8fHwxNzcxMTYxNzMzfDA&ixlib=rb-4.1.0&q=85",
+        "avatar_placeholder": "https://images.unsplash.com/photo-1758523672800-63130c59175b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1Mjh8MHwxfHNlYXJjaHwxfHxzaW1wbGUlMjBkaXZlcnNlJTIwcGVvcGxlJTIwcG9ydHJhaXQlMjBzbWlsaW5nJTIwd2hpdGUlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MTE2MTczNHww&ixlib=rb-4.1.0&q=85"
+      }
+    },
+    "accessibility": {
+      "contrast": "Ensure all text meets WCAG AAA standards (7:1) for main content due to outdoor usage.",
+      "touch_targets": "All interactive elements must be at least 48x48px.",
+      "aria": "Use aria-live='polite' for the token counter updates.",
+      "screen_readers": "Token numbers must be read as digits (e.g., 'One Zero Five' not 'One Hundred Five')."
+    }
+  },
+  "implementation_instructions": {
+    "tech_stack": {
+      "frontend": "React, Tailwind CSS, Shadcn UI (modified)",
+      "icons": "lucide-react",
+      "state": "React Context or Zustand (simple state)"
+    },
+    "universal_rules": [
+      "DO NOT use gradients for text or backgrounds. Flat, high contrast colors only.",
+      "DO NOT use 'Inter' font. Use 'Work Sans' for headings and 'Public Sans' for body.",
+      "ALWAYS add 'data-testid' to every button, input, and key display element.",
+      "Mobile-first: Design for 360px width first, then expand.",
+      "Use 'sonner' for all toast notifications."
+    ],
+    "pages": {
+      "landing": {
+        "layout": "Hero section with shop selector card. Minimal distractions.",
+        "elements": ["ShopSelector (Combobox)", "Primary Button (Join Queue)", "Secondary Button (Admin Login)"]
+      },
+      "token_generation": {
+        "layout": "Simple form, centered, max-width-sm.",
+        "elements": ["Name Input", "Ration Card Input", "Submit Button", "Wait Time Estimate"]
+      },
+      "live_counter": {
+        "layout": "Full screen focus on Current Token. List of next 3 tokens below.",
+        "elements": ["BigTokenDisplay", "QueueList", "RefreshIndicator"]
+      },
+      "admin_dashboard": {
+        "layout": "Dense but touch-friendly. Control panel at bottom fixed position on mobile.",
+        "elements": ["QueueTable", "ActionControls (Next, Skip, Serve)", "ResetButton"]
+      }
+    }
+  }
+}
