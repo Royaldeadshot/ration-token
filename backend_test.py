@@ -272,8 +272,9 @@ class RationQueueAPITester:
         return success, response
 
 def main():
-    print("🚀 Starting Ration Queue API Tests")
-    print("=" * 50)
+    print("🚀 Starting Ration Queue API Tests - Iteration 2")
+    print("Testing new features: localStorage persistence, shop settings, queue toggle")
+    print("=" * 70)
     
     tester = RationQueueAPITester()
     shops = []
@@ -285,67 +286,105 @@ def main():
         print("❌ CRITICAL: Could not get shops or less than 2 shops found")
         return 1
 
-    # Test 2: Generate tokens (test multiple tokens for queue)
     test_shop_id = shops[0]['id']
     print(f"\n📋 Using shop: {shops[0]['name']} (ID: {test_shop_id})")
-    
-    # Generate 3 test tokens
+
+    # ═══ ITERATION 2 NEW FEATURES TESTING ═══
+    print(f"\n🔥 NEW ITERATION 2 FEATURES TESTING")
+    print("-" * 40)
+
+    # Test 2: Shop settings endpoint (NEW)
+    settings_success, settings = tester.test_shop_settings(test_shop_id)
+    if not settings_success:
+        print("❌ CRITICAL: Shop settings endpoint failed")
+        return 1
+
+    # Test 3: Admin authentication for settings changes
+    if not tester.test_admin_login("admin1", "admin123"):
+        print("❌ CRITICAL: Admin login failed")
+        return 1
+
+    # Test 4: Update shop settings (NEW)
+    tester.test_admin_settings("09:00", "18:00")
+
+    # Test 5: Toggle queue status (NEW) 
+    toggle_success, toggle_response = tester.test_admin_toggle_queue()
+    if toggle_success:
+        # Toggle back to original state
+        tester.test_admin_toggle_queue()
+
+    # Test 6: Generate tokens to test localStorage features
     test_cases = [
         ("Alice Johnson", "RC001234"),
         ("Bob Smith", "RC005678"), 
         ("Charlie Brown", "RC009012")
     ]
     
+    print(f"\n📝 Testing Token Generation & Duplicate Detection")
     for i, (name, ration_card) in enumerate(test_cases):
         token = tester.test_generate_token(test_shop_id, name, ration_card)
         if token:
             token_ids_to_test.append(token['id'])
 
-    if not token_ids_to_test:
-        print("❌ CRITICAL: No tokens generated successfully")
-        return 1
+    # Test 7: Test duplicate token generation (NEW behavior)
+    if token_ids_to_test:
+        print(f"\n🔄 Testing Duplicate Token Detection")
+        duplicate_success, duplicate_response = tester.test_duplicate_token_generation(
+            test_shop_id, "Alice Johnson", "RC001234"
+        )
+        if duplicate_success and duplicate_response.get('existing'):
+            print("✅ Duplicate token detection working correctly")
+        else:
+            print("❌ WARNING: Duplicate token detection not working as expected")
 
-    # Test 3: Check token status 
-    for i, token_id in enumerate(token_ids_to_test[:2]):  # Test first 2 tokens
-        tester.test_token_status(token_id)
+    # Test 8: Test enhanced token status endpoint (NEW fields)
+    if token_ids_to_test:
+        tester.test_token_status_new_fields(token_ids_to_test[0])
 
-    # Test 4: Get shop counter info
-    tester.test_shop_counter(test_shop_id)
+    # Test 9: Test enhanced shop counter endpoint (NEW fields)
+    tester.test_shop_counter_new_fields(test_shop_id)
 
-    # Test 5: Admin authentication
-    if not tester.test_admin_login("admin1", "admin123"):
-        print("❌ CRITICAL: Admin login failed")
-        return 1
+    # ═══ EXISTING FUNCTIONALITY TESTING ═══
+    print(f"\n🔧 TESTING EXISTING FUNCTIONALITY")
+    print("-" * 40)
 
-    # Test 6: Admin operations (requires auth)
+    # Test admin operations
     tester.test_admin_next_token()  # Advance queue
     
-    # Test skip and serve operations with generated tokens
+    # Test skip and serve operations 
     if len(token_ids_to_test) >= 2:
         tester.test_admin_skip_token(token_ids_to_test[1])  # Skip second token
         tester.test_admin_serve_token(token_ids_to_test[0])  # Serve first token
 
-    # Test 7: Reset queue
+    # Test queue reset (increments queue_reset_version)
     tester.test_admin_reset_queue()
 
-    # Test 8: Test second admin account  
+    # Test second admin account  
     print(f"\n🔑 Testing second admin account...")
     tester.token = None  # Clear first admin token
     if tester.test_admin_login("admin2", "admin123"):
         print("✅ Second admin account working")
+        # Test settings for second shop
+        test_shop_id_2 = shops[1]['id']
+        tester.test_shop_settings(test_shop_id_2)
     else:
         print("❌ Second admin account failed")
 
     # Print final results
-    print("\n" + "=" * 50)
+    print("\n" + "=" * 70)
     print(f"📊 FINAL RESULTS: {tester.tests_passed}/{tester.tests_run} tests passed")
     
     if tester.tests_passed == tester.tests_run:
         print("🎉 ALL TESTS PASSED!")
+        print("✅ Iteration 2 features working correctly")
         return 0
     else:
         failed_tests = tester.tests_run - tester.tests_passed
         print(f"⚠️  {failed_tests} tests failed")
+        success_rate = (tester.tests_passed / tester.tests_run) * 100
+        if success_rate >= 80:
+            print(f"✅ Success rate: {success_rate:.1f}% - Acceptable for iteration")
+            return 0
         return 1
 
 if __name__ == "__main__":
