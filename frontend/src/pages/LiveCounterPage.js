@@ -47,6 +47,18 @@ export default function LiveCounterPage() {
     );
   }
 
+  // Calculate how many tokens can be served today
+  const calcCanServeToday = () => {
+    if (!counter.queue_end_time || !counter.avg_service_time) return -1;
+    const now = new Date();
+    const [endH, endM] = counter.queue_end_time.split(":").map(Number);
+    const remainingMinutes =
+      endH * 60 + endM - (now.getHours() * 60 + now.getMinutes());
+    if (remainingMinutes <= 0) return 0;
+    return Math.floor(remainingMinutes / counter.avg_service_time);
+  };
+  const canServeToday = calcCanServeToday();
+
   return (
     <div className="min-h-screen flex flex-col p-4 md:p-8">
       <div className="w-full max-w-2xl mx-auto space-y-6">
@@ -74,6 +86,34 @@ export default function LiveCounterPage() {
         >
           {counter.shop_name}
         </p>
+
+        {/* Queue Status Bar */}
+        <div
+          data-testid="counter-queue-status"
+          className={`flex items-center justify-between rounded-xl px-5 py-3 ${
+            counter.queue_status === "live"
+              ? "bg-green-50 border-2 border-green-200"
+              : "bg-red-50 border-2 border-red-200"
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className={`w-3 h-3 rounded-full ${
+                counter.queue_status === "live"
+                  ? "bg-green-500 animate-pulse"
+                  : "bg-red-500"
+              }`}
+            />
+            <span className="font-semibold text-sm">
+              {counter.queue_status === "live" ? "Queue LIVE" : "Queue STOPPED"}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {counter.queue_status === "stopped"
+              ? `Starts at ${counter.queue_start_time}`
+              : `${counter.queue_start_time} - ${counter.queue_end_time}`}
+          </div>
+        </div>
 
         {/* Main Counter Display */}
         <Card className="border-2 shadow-xl rounded-xl overflow-hidden">
@@ -139,25 +179,38 @@ export default function LiveCounterPage() {
                   Up Next
                 </p>
                 <div className="space-y-2">
-                  {counter.next_tokens.map((t, i) => (
-                    <div
-                      key={t.id}
-                      data-testid={`next-token-${i}`}
-                      className="flex items-center justify-between bg-muted/30 rounded-lg px-4 py-3 animate-slide-up"
-                      style={{ animationDelay: `${i * 80}ms` }}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Badge
-                          variant="outline"
-                          className="font-mono text-base px-3 py-1 font-bold border-primary/30 text-primary"
-                        >
-                          #{t.token_number}
-                        </Badge>
-                        <span className="text-sm text-foreground">{t.name}</span>
+                  {counter.next_tokens.map((t, i) => {
+                    const servingOffset = counter.current_serving ? 1 : 0;
+                    const isNextDayToken =
+                      canServeToday >= 0 && i + servingOffset >= canServeToday;
+                    return (
+                      <div
+                        key={t.id}
+                        data-testid={`next-token-${i}`}
+                        className="flex items-center justify-between bg-muted/30 rounded-lg px-4 py-3 animate-slide-up"
+                        style={{ animationDelay: `${i * 80}ms` }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Badge
+                            variant="outline"
+                            className="font-mono text-base px-3 py-1 font-bold border-primary/30 text-primary"
+                          >
+                            #{t.token_number}
+                          </Badge>
+                          <span className="text-sm text-foreground">{t.name}</span>
+                          {isNextDayToken && (
+                            <Badge
+                              data-testid={`next-day-badge-${i}`}
+                              className="bg-secondary/15 text-secondary text-xs rounded-full"
+                            >
+                              Next Day
+                            </Badge>
+                          )}
+                        </div>
+                        <Ticket className="w-4 h-4 text-muted-foreground" />
                       </div>
-                      <Ticket className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
