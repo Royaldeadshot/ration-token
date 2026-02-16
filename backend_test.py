@@ -179,6 +179,98 @@ class RationQueueAPITester:
         )
         return success
 
+    def test_shop_settings(self, shop_id):
+        """Test GET /api/shops/{shop_id}/settings (NEW in iteration 2)"""
+        success, response = self.run_test(
+            "Get Shop Settings",
+            "GET",
+            f"shops/{shop_id}/settings",
+            200
+        )
+        if success:
+            print(f"   Queue Start Time: {response.get('queue_start_time')}")
+            print(f"   Queue End Time: {response.get('queue_end_time')}")
+            print(f"   Queue Status: {response.get('queue_status')}")
+            print(f"   Queue Reset Version: {response.get('queue_reset_version')}")
+        return success, response
+
+    def test_admin_settings(self, start_time, end_time):
+        """Test POST /api/admin/settings (NEW in iteration 2, requires auth)"""
+        success, response = self.run_test(
+            "Admin Update Settings",
+            "POST",
+            "admin/settings",
+            200,
+            data={
+                "queue_start_time": start_time,
+                "queue_end_time": end_time
+            }
+        )
+        return success
+
+    def test_admin_toggle_queue(self):
+        """Test POST /api/admin/toggle-queue (NEW in iteration 2, requires auth)"""
+        success, response = self.run_test(
+            "Admin Toggle Queue",
+            "POST",
+            "admin/toggle-queue",
+            200
+        )
+        if success:
+            print(f"   New Queue Status: {response.get('queue_status')}")
+            print(f"   Message: {response.get('message')}")
+        return success, response
+
+    def test_duplicate_token_generation(self, shop_id, name, ration_card):
+        """Test duplicate token generation (existing user)"""
+        success, response = self.run_test(
+            "Generate Token (Duplicate Check)",
+            "POST",
+            "tokens/generate",
+            200,
+            data={
+                "name": name,
+                "ration_card": ration_card,
+                "shop_id": shop_id
+            }
+        )
+        if success:
+            print(f"   Is Existing Token: {response.get('existing')}")
+            print(f"   Token Number: {response.get('token_number')}")
+            print(f"   Queue Reset Version: {response.get('queue_reset_version')}")
+        return success, response
+
+    def test_token_status_new_fields(self, token_id):
+        """Test GET /api/tokens/{token_id}/status with new fields"""
+        success, response = self.run_test(
+            "Get Token Status (New Fields)",
+            "GET",
+            f"tokens/{token_id}/status",
+            200
+        )
+        if success:
+            print(f"   Status: {response.get('status')}")
+            print(f"   Queue Status: {response.get('queue_status')}")
+            print(f"   Queue Start Time: {response.get('queue_start_time')}")
+            print(f"   Queue End Time: {response.get('queue_end_time')}")
+            print(f"   Queue Reset Version: {response.get('queue_reset_version')}")
+        return success
+
+    def test_shop_counter_new_fields(self, shop_id):
+        """Test GET /api/shops/{shop_id}/counter with new fields"""
+        success, response = self.run_test(
+            "Get Shop Counter (New Fields)",
+            "GET",
+            f"shops/{shop_id}/counter",
+            200
+        )
+        if success:
+            print(f"   Queue Status: {response.get('queue_status')}")
+            print(f"   Queue Start Time: {response.get('queue_start_time')}")
+            print(f"   Queue End Time: {response.get('queue_end_time')}")
+            print(f"   Avg Service Time: {response.get('avg_service_time')}")
+        return success, response
+
 def main():
     print("🚀 Starting Ration Queue API Tests")
     print("=" * 50)
