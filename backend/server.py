@@ -230,6 +230,7 @@ async def get_token_status(token_id: str):
     if not token:
         raise HTTPException(status_code=404, detail="Token not found")
 
+    shop = await db.shops.find_one({"id": token["shop_id"]}, {"_id": 0})
     tokens_ahead = 0
     est_wait = 0.0
 
@@ -254,7 +255,11 @@ async def get_token_status(token_id: str):
         "created_at": token["created_at"],
         "served_at": token.get("served_at"),
         "tokens_ahead": tokens_ahead,
-        "estimated_wait_minutes": est_wait
+        "estimated_wait_minutes": est_wait,
+        "queue_status": shop.get("queue_status", "live") if shop else "live",
+        "queue_start_time": shop.get("queue_start_time", "08:00") if shop else "08:00",
+        "queue_end_time": shop.get("queue_end_time", "17:00") if shop else "17:00",
+        "queue_reset_version": shop.get("queue_reset_version", 1) if shop else 1
     }
 
 
