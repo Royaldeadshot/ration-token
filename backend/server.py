@@ -373,8 +373,47 @@ async def serve_token(token_id: str, admin=Depends(get_current_admin)):
 async def reset_queue(admin=Depends(get_current_admin)):
     shop_id = admin["shop_id"]
     await db.tokens.delete_many({"shop_id": shop_id})
-    await db.shops.update_one({"id": shop_id}, {"$set": {"current_token_counter": 0}})
+    await db.shops.update_one(
+        {"id": shop_id},
+        {"$set": {"current_token_counter": 0}, "$inc": {"queue_reset_version": 1}}
+    )
     return {"message": "Queue reset successfully"}
+
+
+@api_router.post("/admin/settings")
+async def update_shop_settings(req: ShopSettingsRequest, admin=Depends(get_current_admin)):
+    await db.shops.update_one(
+        {"id": admin["shop_id"]},
+        {"$set": {
+            "queue_start_time": req.queue_start_time,
+            "queue_end_time": req.queue_end_time
+        }}
+    )
+    return {"message": "Settings updated"}
+
+
+@api_router.post("/admin/toggle-queue")
+async def toggle_queue(admin=Depends(get_current_admin)):
+    shop = await db.shops.find_one({"id": admin["shop_id"]}, {"_id": 0})
+    new_status = "stopped" if shop.get("queue_status") == "live" else "live"
+    await db.shops.update_one(
+        {"id": admin["shop_id"]},
+        {"$set": {"queue_status": new_status}}
+    )
+    return {"message": f"Queue {new_status}", "queue_status": new_status}
+
+
+@api_router.get("/shops/{shop_id}/settings")
+async def get_shop_settings(shop_id: str):
+    shop = await db.shops.find_one({"id": shop_id}, {"_id": 0})
+    if not shop:
+        raise HTTPException(status_code=404, detail="Shop not found")
+    return {
+        "queue_start_time": shop.get("queue_start_time", "08:00"),
+        "queue_end_time": shop.get("queue_end_time", "17:00"),
+        "queue_status": shop.get("queue_status", "live"),
+        "queue_reset_version": shop.get("queue_reset_version", 1)
+    }
 
 
 # ── App Setup ───────────────────────────────────────────
