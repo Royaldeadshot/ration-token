@@ -157,6 +157,33 @@ async def generate_token(req: TokenGenerateRequest):
     if not shop:
         raise HTTPException(status_code=404, detail="Shop not found")
 
+    # Check if ration card already has an active token
+    existing = await db.tokens.find_one(
+        {"shop_id": req.shop_id, "ration_card": req.ration_card, "status": {"$in": ["waiting", "serving"]}},
+        {"_id": 0}
+    )
+    if existing:
+        waiting_ahead = await db.tokens.count_documents({
+            "shop_id": req.shop_id, "status": "waiting",
+            "token_number": {"$lt": existing["token_number"]}
+        })
+        serving_exists = await db.tokens.count_documents({"shop_id": req.shop_id, "status": "serving"})
+        tokens_ahead = waiting_ahead + (1 if serving_exists > 0 and existing["status"] != "serving" else 0)
+        avg_time = await calc_avg_service_time(req.shop_id)
+        return {
+            "id": existing["id"],
+            "shop_id": existing["shop_id"],
+            "token_number": existing["token_number"],
+            "name": existing["name"],
+            "ration_card": existing["ration_card"],
+            "status": existing["status"],
+            "created_at": existing["created_at"],
+            "tokens_ahead": tokens_ahead,
+            "estimated_wait_minutes": round(tokens_ahead * avg_time, 1),
+            "existing": True,
+            "queue_reset_version": shop.get("queue_reset_version", 1)
+        }
+
     new_counter = shop["current_token_counter"] + 1
     await db.shops.update_one({"id": req.shop_id}, {"$set": {"current_token_counter": new_counter}})
 
@@ -191,7 +218,9 @@ async def generate_token(req: TokenGenerateRequest):
         "status": token["status"],
         "created_at": token["created_at"],
         "tokens_ahead": tokens_ahead,
-        "estimated_wait_minutes": round(tokens_ahead * avg_time, 1)
+        "estimated_wait_minutes": round(tokens_ahead * avg_time, 1),
+        "existing": False,
+        "queue_reset_version": shop.get("queue_reset_version", 1)
     }
 
 
