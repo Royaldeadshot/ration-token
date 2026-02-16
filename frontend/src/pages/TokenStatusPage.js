@@ -11,12 +11,30 @@ export default function TokenStatusPage() {
   const navigate = useNavigate();
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [expired, setExpired] = useState(false);
 
   const fetchStatus = useCallback(async () => {
     try {
       const res = await API.get(`/tokens/${tokenId}/status`);
       setToken(res.data);
+      // Validate localStorage against reset version
+      const stored = localStorage.getItem("user_token_data");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (
+            parsed.tokenId === tokenId &&
+            res.data.queue_reset_version !== parsed.resetVersion
+          ) {
+            localStorage.removeItem("user_token_data");
+            setExpired(true);
+          }
+        } catch {}
+      }
     } catch (err) {
+      // Token might have been deleted (queue reset)
+      localStorage.removeItem("user_token_data");
+      setExpired(true);
       console.error(err);
     } finally {
       setLoading(false);
@@ -30,16 +48,42 @@ export default function TokenStatusPage() {
   }, [fetchStatus]);
 
   const statusConfig = {
-    waiting: { label: "Waiting", color: "bg-primary/15 text-primary border-primary/30" },
-    serving: { label: "Now Serving", color: "bg-secondary/15 text-secondary border-secondary/30" },
+    waiting: {
+      label: "Waiting",
+      color: "bg-primary/15 text-primary border-primary/30",
+    },
+    serving: {
+      label: "Now Serving",
+      color: "bg-secondary/15 text-secondary border-secondary/30",
+    },
     served: { label: "Served", color: "bg-muted text-muted-foreground" },
-    skipped: { label: "Skipped", color: "bg-destructive/15 text-destructive border-destructive/30" },
+    skipped: {
+      label: "Skipped",
+      color: "bg-destructive/15 text-destructive border-destructive/30",
+    },
   };
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (expired && !token) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 gap-4">
+        <p className="text-lg text-muted-foreground">
+          This token has expired. The queue was reset.
+        </p>
+        <Button
+          data-testid="go-home-expired"
+          onClick={() => navigate("/")}
+          className="rounded-full bg-primary text-primary-foreground"
+        >
+          Go Home
+        </Button>
       </div>
     );
   }
@@ -53,6 +97,21 @@ export default function TokenStatusPage() {
   }
 
   const status = statusConfig[token.status] || statusConfig.waiting;
+
+  // Calculate "next day" indicator
+  let isNextDay = false;
+  if (
+    token.status === "waiting" &&
+    token.estimated_wait_minutes > 0 &&
+    token.queue_end_time
+  ) {
+    const now = new Date();
+    const [endH, endM] = token.queue_end_time.split(":").map(Number);
+    const endMinutes = endH * 60 + endM;
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const remainingToday = endMinutes - currentMinutes;
+    isNextDay = remainingToday > 0 && token.estimated_wait_minutes > remainingToday;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
@@ -80,7 +139,10 @@ export default function TokenStatusPage() {
             >
               {token.token_number}
             </div>
-            <p data-testid="token-holder-name" className="mt-3 text-lg font-medium text-foreground">
+            <p
+              data-testid="token-holder-name"
+              className="mt-3 text-lg font-medium text-foreground"
+            >
               {token.name}
             </p>
           </div>
@@ -98,6 +160,27 @@ export default function TokenStatusPage() {
                 {status.label}
               </Badge>
             </div>
+
+            {/* Queue Status */}
+            {token.queue_status && (
+              <div
+                data-testid="token-queue-status"
+                className="flex items-center justify-center gap-3 text-sm"
+              >
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    token.queue_status === "live"
+                      ? "bg-green-500 animate-pulse"
+                      : "bg-red-500"
+                  }`}
+                />
+                <span className="text-muted-foreground">
+                  {token.queue_status === "live"
+                    ? "Queue is LIVE"
+                    : `Queue STOPPED — starts ${token.queue_start_time}`}
+                </span>
+              </div>
+            )}
 
             {/* Info Grid */}
             {(token.status === "waiting" || token.status === "serving") && (
@@ -122,6 +205,21 @@ export default function TokenStatusPage() {
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">Min wait</p>
                 </div>
+              </div>
+            )}
+
+            {/* Next Day Indicator */}
+            {isNextDay && (
+              <div
+                data-testid="next-day-indicator"
+                className="bg-secondary/10 border border-secondary/20 rounded-lg p-3 text-center"
+              >
+                <p className="text-sm font-medium text-secondary">
+                  Your token will be served next day
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Queue closes at {token.queue_end_time}
+                </p>
               </div>
             )}
 
