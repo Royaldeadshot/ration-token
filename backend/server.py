@@ -99,6 +99,10 @@ async def seed_data():
                 "name": "Ration Shop - Block A",
                 "address": "Main Market, Block A",
                 "current_token_counter": 0,
+                "queue_start_time": "08:00",
+                "queue_end_time": "17:00",
+                "queue_status": "live",
+                "queue_reset_version": 1,
                 "created_at": datetime.now(timezone.utc).isoformat()
             },
             {
@@ -106,6 +110,10 @@ async def seed_data():
                 "name": "Ration Shop - Block B",
                 "address": "Village Center, Block B",
                 "current_token_counter": 0,
+                "queue_start_time": "08:00",
+                "queue_end_time": "17:00",
+                "queue_status": "live",
+                "queue_reset_version": 1,
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
         ]
@@ -122,6 +130,17 @@ async def seed_data():
             await db.admins.insert_one(admin)
 
         logger.info("Seeded 2 shops and 2 admin accounts")
+
+    # Migration: add new fields to existing shops
+    await db.shops.update_many(
+        {"queue_start_time": {"$exists": False}},
+        {"$set": {
+            "queue_start_time": "08:00",
+            "queue_end_time": "17:00",
+            "queue_status": "live",
+            "queue_reset_version": 1
+        }}
+    )
 
 
 # ── Public Routes ───────────────────────────────────────
