@@ -10,16 +10,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Eye, ShieldCheck, Store } from "lucide-react";
+import { Users, Eye, ShieldCheck, Store, Ticket, Clock } from "lucide-react";
 
 export default function HomePage() {
   const [shops, setShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState("");
+  const [savedToken, setSavedToken] = useState(null);
+  const [shopSettings, setShopSettings] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    API.get("/shops").then((res) => setShops(res.data)).catch(console.error);
+    API.get("/shops").then((res) => {
+      setShops(res.data);
+      // Check localStorage for saved token
+      const stored = localStorage.getItem("user_token_data");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          API.get(`/shops/${parsed.shopId}/settings`).then((settingsRes) => {
+            if (settingsRes.data.queue_reset_version === parsed.resetVersion) {
+              setSavedToken(parsed);
+            } else {
+              localStorage.removeItem("user_token_data");
+            }
+          }).catch(() => localStorage.removeItem("user_token_data"));
+        } catch {
+          localStorage.removeItem("user_token_data");
+        }
+      }
+    }).catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (selectedShop) {
+      API.get(`/shops/${selectedShop}/settings`)
+        .then((res) => setShopSettings(res.data))
+        .catch(console.error);
+    } else {
+      setShopSettings(null);
+    }
+  }, [selectedShop]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8">
@@ -39,6 +69,33 @@ export default function HomePage() {
             Get your token online. No more long queues.
           </p>
         </div>
+
+        {/* Saved Token Resume */}
+        {savedToken && (
+          <Card
+            data-testid="resume-token-card"
+            className="border-2 border-primary/30 bg-primary/5 shadow-lg rounded-xl"
+          >
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Your active token</p>
+                <p className="font-mono text-2xl font-bold text-primary">
+                  #{savedToken.tokenNumber}
+                </p>
+              </div>
+              <Button
+                data-testid="resume-token-btn"
+                onClick={() =>
+                  navigate(`/shop/${savedToken.shopId}/token/${savedToken.tokenId}`)
+                }
+                className="h-12 px-6 rounded-full bg-primary text-primary-foreground font-semibold"
+              >
+                <Ticket className="w-4 h-4 mr-2" />
+                View Status
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Shop Selector Card */}
         <Card className="border-2 shadow-lg rounded-xl">
@@ -70,6 +127,31 @@ export default function HomePage() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Queue Status */}
+            {shopSettings && (
+              <div
+                data-testid="queue-status-display"
+                className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-3"
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`w-3 h-3 rounded-full ${
+                      shopSettings.queue_status === "live"
+                        ? "bg-green-500 animate-pulse"
+                        : "bg-red-500"
+                    }`}
+                  />
+                  <span className="font-medium text-sm">
+                    {shopSettings.queue_status === "live" ? "Queue LIVE" : "Queue STOPPED"}
+                  </span>
+                </div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  {shopSettings.queue_start_time} - {shopSettings.queue_end_time}
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="space-y-3">
