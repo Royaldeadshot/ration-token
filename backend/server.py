@@ -264,7 +264,12 @@ async def get_counter(shop_id: str):
             for t in next_tokens
         ],
         "total_waiting": total_waiting,
-        "estimated_wait_minutes": round(total_waiting * avg_time, 1)
+        "estimated_wait_minutes": round(total_waiting * avg_time, 1),
+        "queue_status": shop.get("queue_status", "live"),
+        "queue_start_time": shop.get("queue_start_time", "08:00"),
+        "queue_end_time": shop.get("queue_end_time", "17:00"),
+        "queue_reset_version": shop.get("queue_reset_version", 1),
+        "avg_service_time": avg_time
     }
 
 
