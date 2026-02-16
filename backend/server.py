@@ -44,6 +44,10 @@ class AdminLoginRequest(BaseModel):
     username: str
     password: str
 
+class ShopSettingsRequest(BaseModel):
+    queue_start_time: str
+    queue_end_time: str
+
 
 # ── Auth Helper ─────────────────────────────────────────
 
