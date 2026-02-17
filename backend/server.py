@@ -84,7 +84,7 @@ async def calc_avg_service_time(shop_id: str) -> float:
                 continue
         if len(times) >= 5:
             return sum(times) / len(times)
-    return 8.0
+    return 5.0
 
 
 # ── Seed Data ───────────────────────────────────────────
