@@ -130,9 +130,7 @@ export default function LiveCounterPage() {
                 >
                   {counter.current_serving.token_number}
                 </div>
-                <p className="mt-4 text-lg text-muted-foreground">
-                  {counter.current_serving.name}
-                </p>
+                {/* Name hidden for privacy */}
               </>
             ) : (
               <div className="space-y-2">
@@ -197,7 +195,7 @@ export default function LiveCounterPage() {
                           >
                             #{t.token_number}
                           </Badge>
-                          <span className="text-sm text-foreground">{t.name}</span>
+                          <span className="text-sm text-foreground">{t.name[0]}***</span>
                           {isNextDayToken && (
                             <Badge
                               data-testid={`next-day-badge-${i}`}
